@@ -1,0 +1,114 @@
+:root{font-family:"PingFang SC","Microsoft YaHei",Arial,sans-serif;color:#111;background:#f5f6fa;font-size:14px}
+*{box-sizing:border-box}
+body{margin:0;background:#f5f6fa}
+.canvas{width:100%;min-height:100vh;background:#f5f6fa}
+.topbar{height:68px;background:#fff;display:flex;align-items:center;padding:0 28px;position:relative}
+.brand{display:flex;align-items:center;gap:8px;width:auto;min-width:0;font-size:16px;white-space:nowrap}
+.brandmark{width:34px;height:34px;border-radius:8px;background:#f0f2ff;color:#4c6fff;display:grid;place-items:center;font-size:22px;transform:rotate(45deg)}
+.brand b{font-size:16px}
+.beta,.mode{background:#ebf1fe;color:#1b6af9;border-radius:5px;padding:4px 9px;font-size:12px}
+.steps{display:flex;align-items:center;gap:13px;position:absolute;left:50%;transform:translateX(-50%)}
+.steps em{height:2px;width:29px;background:#d9d9d9}
+.step{display:flex;align-items:center;gap:9px;white-space:nowrap}
+.step i{font-style:normal;width:22px;height:22px;border-radius:50%;display:grid;place-items:center;background:#f3f3f5;color:#858585}
+.step.active i{background:#1b6af9;color:#fff}
+.header-actions{margin-left:auto;display:flex;gap:16px}
+.header-actions button,.actionbar button{height:39px;padding:0 25px}
+.ghost,button{border:0;background:none;font:inherit}
+.outline{background:#fff!important;border:3px solid #f3f3f5!important;border-radius:6px}
+.primary{background:#1b6af9!important;color:#fff;border-radius:6px}
+.workspace{height:auto;padding:27px 28px 0;display:grid;grid-template-columns:571fr 446fr 345fr;gap:12px}
+.left-column{display:grid;grid-template-rows:auto minmax(0,1fr);gap:9px}
+.card{background:#fff;border-radius:6px;min-width:0}
+.section-head{height:73px;display:flex;align-items:center;padding:0 20px;position:relative}
+.section-head:before,.preview-head:before{content:"";width:11px;height:32px;background:#eef1f5;border-radius:2px;position:absolute;left:12px}
+.section-head h2{font-size:18px;margin:0 0 0 8px}
+.section-head .mode{margin-left:22px}
+.switch{margin-left:auto;width:40px;height:24px;border-radius:13px;background:#1b6af9;position:relative}
+.switch:after{content:"";position:absolute;width:18px;height:18px;border-radius:50%;background:#fff;right:3px;top:3px}
+.prompt{height:173px;border:4px solid #f3f3f5;border-radius:6px;margin:0 16px;padding:16px 12px;font-size:13px;line-height:1.55;position:relative}
+.count{position:absolute;right:70px;bottom:15px;color:#858585}
+.send{position:absolute;right:14px;bottom:12px;width:33px;height:33px;background:#1b6af9;color:#fff;border-radius:50%}
+.shortcuts{height:73px;display:flex;align-items:center;gap:14px;padding:0 18px;font-size:13px}
+.shortcuts>span{margin-right:50px}
+.shortcuts button{border:3px solid #f3f3f5;border-radius:6px;padding:4px 13px;white-space:nowrap}
+.plan .section-head{height:65px}
+.collapse{margin-left:auto;color:#858585;font-size:13px}
+.timeline{padding:0 24px 0 30px}
+.timeline article{height:85px;display:grid;grid-template-columns:30px 1fr 70px;position:relative}
+.timeline article>i{z-index:2;width:24px;height:24px;border-radius:50%;background:#1b6af9;color:#fff;display:grid;place-items:center;font-style:normal}
+.timeline article:not(:last-child):before{content:"";position:absolute;left:11px;top:22px;width:2px;height:68px;background:#d9d9d9}
+.timeline h3{margin:0;font-size:16px;font-weight:600}
+.timeline h3 b{font-size:12px;font-weight:400;margin-left:10px;padding:4px 8px;border-radius:5px;background:#e3f4ec;color:#02aa5b}
+.timeline p{margin:7px 0 0;color:#858585;font-size:12px;line-height:1.55;max-width:380px}
+.timeline time{color:#858585;font-size:13px;text-align:right}
+.timeline .running h3 b{background:#ebf1fe;color:#1b6af9}
+.timeline .pending>i{background:#f3f3f5}
+.timeline .pending time{background:#f3f3f5;height:19px;border-radius:5px}
+.deep-note{height:39px;margin:7px 16px 0;background:#f4f6fe;border-radius:6px;padding:12px;font-size:12px}
+.deep-note span,.deep-note a{color:#1b6af9}
+.deep-note a{float:right}
+.preview{position:relative;padding:0 16px}
+.preview-head{height:86px;display:flex;align-items:center;position:relative}
+.preview-head h2{font-size:18px;margin:0 0 0 12px}
+.preview-head small{font-size:14px;color:#858585;font-weight:400}
+.live{margin-left:auto;color:#858585;font-size:14px}
+.live::first-letter{color:#02c066}
+.preview-tools{display:flex;justify-content:flex-end;gap:8px;height:44px}
+.preview-tools button{height:30px;border-radius:6px;background:#f3f3f5;color:#858585}
+.preview-tools button:first-child{border:1px solid #1b6af9;color:#858585;background:#ebf1fe;padding:0 16px}
+.phone{height:646px;width:302px;margin:0 auto;background:#111;border:8px solid #111;border-radius:48px;box-shadow:0 0 0 3px #444;position:relative;padding:10px 4px}
+.phone:before,.phone:after{content:"";position:absolute;background:#333;width:4px;left:-12px;border-radius:4px}
+.phone:before{height:58px;top:120px}
+.phone:after{height:86px;top:190px}
+.island{position:absolute;z-index:3;top:10px;left:50%;transform:translateX(-50%);width:75px;height:23px;border-radius:14px;background:#050505}
+.phone-page{height:100%;background:#fbfeff;border-radius:36px;overflow:hidden;padding:45px 15px 0}
+.hello{height:56px;display:flex;justify-content:space-between;align-items:center;font-size:12px}
+.hello img{width:36px;height:36px;border-radius:50%;object-fit:cover}
+.hero{height:176px;border-radius:6px;overflow:hidden;position:relative;box-shadow:0 2px 8px #0002}
+.hero>img{width:100%;height:100%;object-fit:cover}
+.hero>div{position:absolute;right:18px;top:58px;text-align:center}
+.hero h3{font-size:17px;margin:0}
+.hero p{font-size:9px;margin:8px 0}
+.hero button{font-size:10px;background:#1b6af9;color:#fff;border-radius:6px;padding:5px 12px}
+.dots{text-align:center;height:22px}
+.quick-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.quick-grid figure,.category-grid figure{margin:0;text-align:center}
+.quick-grid img{width:54px;height:54px;border-radius:6px;object-fit:cover}
+.quick-grid figcaption,.category-grid figcaption{font-size:10px;margin-top:5px}
+.category-title{display:flex;justify-content:space-between;margin:18px 0 10px;font-size:12px}
+.category-title span{color:#858585}
+.category-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.category-grid img{width:100%;height:110px;border-radius:6px;object-fit:cover}
+.mobile-nav{height:58px;border-top:3px solid #d9d9d9;position:absolute;bottom:0;left:0;right:0;background:#fff;display:grid;grid-template-columns:repeat(4,1fr);padding:7px 5px}
+.mobile-nav span{font-size:16px;color:#858585;text-align:center}
+.mobile-nav b{display:block;font-size:10px}
+.mobile-nav .selected{color:#1b6af9}
+.zoom{height:56px;display:flex;align-items:center;justify-content:center;color:#858585;font-size:13px}
+.review{padding:0 27px}
+.review .section-head{padding-left:0;height:66px}
+.review .section-head:before{left:-8px}
+.review .section-head h2{font-size:16px}
+.review-item{height:135px;border:4px solid #f3f3f5;border-radius:6px;margin-bottom:10px;padding:13px 16px;position:relative}
+.review-item>div:first-child{display:flex;justify-content:space-between}
+.review-item h3{font-size:16px;margin:0}
+.review-item span{font-size:13px;padding:3px 9px;border-radius:6px}
+.review-item.warn span{color:#ff080e;background:#fee7e7}
+.review-item.pass span{color:#02c066;background:#e3f4ec}
+.review-item p{color:#858585;font-size:12px;line-height:1.5;width:190px;margin:15px 0}
+.review-item small{position:absolute;bottom:12px}
+.mini-shot,.mini-nav{position:absolute;right:12px;bottom:12px;background:#f8f8f5;font-size:8px;padding:7px}
+.mini-shot b{background:#1b6af9;color:#fff}
+.mini-nav{color:#1b6af9;word-spacing:10px}
+.legend{height:37px;display:flex;align-items:center;justify-content:space-between;font-size:13px}
+.legend .blue{color:#1b6af9}
+.legend .red{color:#ff080e}
+.legend .gray{color:#858585}
+.actionbar{height:74px;background:#fff;border-radius:6px;margin:20px 28px 18px;display:flex;align-items:center;padding:0 30px;font-size:16px}
+.actionbar>div:first-child{width:360px}
+.actionbar span{color:#1b6af9}
+.actionbar p{color:#858585;font-size:13px}
+.actionbar>div:last-child{margin-left:auto;display:flex;gap:16px}
+.actionbar button{width:148px}
+.actionbar .primary{width:154px}
+

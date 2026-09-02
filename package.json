@@ -1,0 +1,15 @@
+{
+  "name": "design-copilot-v2-1-real-ai-integration",
+  "version": "2.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Design Copilot V2.1 with a minimal OpenAI Responses API proxy and LocalDemo fallback.",
+  "scripts": {
+    "start": "node server.mjs",
+    "check": "node --check app.js && node --check server.mjs && node --test tests/*.test.mjs",
+    "test": "node --test tests/*.test.mjs"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

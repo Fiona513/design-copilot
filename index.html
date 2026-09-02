@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Design Copilot V2.1 — 使用结构化真实模型输出完成需求理解、设计生成与评审。" />
+  <meta name="theme-color" content="#f5f6fa" />
+  <title>Design Copilot V2.1 — Real AI Integration</title>
+  <link rel="icon" href="assets/branding/agent-logo.png" />
+  <link rel="stylesheet" href="styles.css" />
+  <link rel="stylesheet" href="calibration.css" />
+  <link rel="stylesheet" href="v2.css" />
+  <script src="app.js" defer></script>
+</head>
+<body>
+  <a class="skip-link" href="#work-canvas">跳到工作画布</a>
+  <main class="canvas" id="app-shell">
+    <header class="topbar">
+      <button class="brand" type="button" data-action="new-project" aria-label="创建新项目">
+        <img class="brandmark" src="assets/branding/agent-logo.png" alt="" />
+        <span><b>Design Copilot</b><small>AI Product Design Agent</small></span>
+        <span class="beta">V2.1</span>
+      </button>
+
+      <nav class="steps" aria-label="任务阶段">
+        <div class="step active" data-stage="understand"><i>1</i><span>理解</span></div><em></em>
+        <div class="step" data-stage="plan"><i>2</i><span>规划</span></div><em></em>
+        <div class="step" data-stage="generate"><i>3</i><span>生成</span></div><em></em>
+        <div class="step" data-stage="review"><i>4</i><span>评审</span></div>
+      </nav>
+
+      <div class="header-actions">
+        <button class="ghost history-button" type="button" data-action="open-history"><img src="assets/icons/history.svg" alt="" />历史</button>
+        <button class="outline share-button" type="button" data-action="share">分享</button>
+        <button class="primary export-button" type="button" data-action="export" disabled>导出 JSON</button>
+      </div>
+    </header>
+
+    <section class="workspace" aria-label="Design Copilot 工作区">
+      <aside class="card context-panel" aria-label="项目上下文">
+        <div class="section-head"><h2>Project Context</h2><span class="context-status" id="project-status">未开始</span></div>
+        <div id="context-content" class="panel-scroll"></div>
+      </aside>
+
+      <section class="card work-panel" id="work-canvas" aria-label="工作画布" tabindex="-1">
+        <div class="work-head">
+          <div>
+            <p class="eyebrow" id="canvas-eyebrow">CREATE PROJECT</p>
+            <h1 id="canvas-title">创建一个设计任务</h1>
+          </div>
+          <div class="canvas-meta" id="canvas-meta"></div>
+        </div>
+        <div id="canvas-content" class="work-scroll" aria-live="polite"></div>
+      </section>
+
+      <aside class="card agent-panel" aria-label="Agent 状态">
+        <div class="section-head">
+          <h2>Agent</h2>
+          <span class="provider-badge">LLM Provider</span>
+        </div>
+        <div id="agent-content" class="panel-scroll"></div>
+      </aside>
+    </section>
+
+    <footer class="actionbar">
+      <div class="agent-state">
+        <img class="status-dot" src="assets/icons/agent-status-dot.svg" alt="" />
+        <span class="agent-state-text">等待创建项目</span>
+      </div>
+      <p class="remaining-time" id="next-step-copy">填写项目信息后开始</p>
+      <div>
+        <button class="outline terminate-task" type="button" data-action="stop" disabled>Stop Task</button>
+        <button class="primary footer-primary" type="button" data-action="footer-primary">Start with Agent</button>
+      </div>
+    </footer>
+  </main>
+
+  <dialog class="mvp-dialog history-dialog" id="history-dialog" aria-labelledby="history-title">
+    <div class="dialog-head"><div><p class="eyebrow">LOCAL HISTORY</p><h2 id="history-title">最近项目</h2></div><button type="button" data-action="close-dialog" aria-label="关闭历史记录">×</button></div>
+    <div id="history-list" class="history-list"></div>
+  </dialog>
+
+  <dialog class="mvp-dialog confirm-dialog" id="confirm-dialog" aria-labelledby="confirm-title">
+    <div class="dialog-head"><div><p class="eyebrow">NEW PROJECT</p><h2 id="confirm-title">创建新项目？</h2></div><button type="button" data-action="close-dialog" aria-label="关闭">×</button></div>
+    <p>当前未完成项目仍会保存在本机，直到新项目开始。你可以先导出 JSON 作为备份。</p>
+    <div class="dialog-actions"><button class="outline" type="button" data-action="close-dialog">取消</button><button class="primary" type="button" data-action="confirm-new">继续创建</button></div>
+  </dialog>
+
+  <div class="mvp-toast" role="status" aria-live="polite"></div>
+</body>
+</html>
