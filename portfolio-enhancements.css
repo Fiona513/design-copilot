@@ -71,9 +71,30 @@
   overflow: auto;
 }
 
+/* Keep the device shell identical across Home / Reading / Completion.
+   Screen content may scroll inside the device, but must never resize it. */
 .portfolio-preview-viewport > .prototype-phone {
+  width: 298px;
+  height: 524px;
+  min-height: 524px;
+  max-height: 524px;
+  margin: 0;
+  flex: 0 0 524px;
   transform: scale(var(--preview-zoom));
   transform-origin: top center;
+}
+
+.portfolio-preview-viewport > .prototype-phone > .prototype-screen {
+  height: 405px;
+  min-height: 405px;
+  max-height: 405px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  scrollbar-width: none;
+}
+
+.portfolio-preview-viewport > .prototype-phone > .prototype-screen::-webkit-scrollbar {
+  display: none;
 }
 
 .portfolio-preview-stage.is-expanded {
