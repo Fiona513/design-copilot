@@ -62,7 +62,8 @@
     /* Local fallback copy must reflect the actual V2 data instead of a hard-coded value. */
     const state = safeState();
     const target = state?.outputs?.prototypes?.v2?.settings?.touchTarget;
-    if (state?.runtime?.provider === "local-demo" && target && state?.status === "review-v2") {
+    const viewingRound2 = state?.status === "review-v2" || (state?.status === "complete" && state?.view === "reviewV2");
+    if (state?.runtime?.provider === "local-demo" && target && viewingRound2) {
       document.querySelectorAll(".review-issue p").forEach((node) => {
         if (/52px/.test(node.textContent || "") && Number(target) !== 52) {
           node.textContent = node.textContent.replaceAll("52px", `${target}px`);
