@@ -173,6 +173,133 @@ body.preview-expanded {
   text-transform: none !important;
 }
 
+/* Completed tasks record fallback use without presenting it as an active error. */
+.provider-fallback-compact {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 10px;
+  align-items: start;
+  margin: 0 0 12px;
+  padding: 10px 11px;
+  border: 1px solid #e8eaf0;
+  border-radius: 7px;
+  background: #fafbfc;
+}
+
+.provider-fallback-compact > span {
+  padding: 3px 6px;
+  border-radius: 999px;
+  background: #eef2f7;
+  color: #68707d;
+  font-size: 8px;
+  font-weight: 800;
+  letter-spacing: .02em;
+  white-space: nowrap;
+}
+
+.provider-fallback-compact b {
+  display: block;
+  color: #313640;
+  font-size: 10px;
+}
+
+.provider-fallback-compact p {
+  margin: 3px 0 0;
+  color: #747b86;
+  font-size: 9px;
+  line-height: 1.45;
+}
+
+/* Turn project history into an auditable version chain without changing saved data. */
+.history-entry {
+  align-items: flex-start !important;
+}
+
+.history-entry > div {
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.history-version-chain {
+  position: relative;
+  display: grid;
+  gap: 0;
+  margin-top: 12px;
+  padding: 2px 0 0 2px;
+}
+
+.history-version-node {
+  position: relative;
+  display: grid;
+  grid-template-columns: 20px 1fr;
+  gap: 8px;
+  min-height: 42px;
+  padding-bottom: 8px;
+}
+
+.history-version-node:not(:last-child)::after {
+  content: "";
+  position: absolute;
+  left: 9px;
+  top: 20px;
+  bottom: 0;
+  width: 1px;
+  background: #dde2ea;
+}
+
+.history-version-node > i {
+  position: relative;
+  z-index: 1;
+  width: 20px;
+  height: 20px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: #edf5f1;
+  color: #15925f;
+  font-size: 9px;
+  font-style: normal;
+  font-weight: 900;
+}
+
+.history-version-node.warn > i {
+  background: #fff5e7;
+  color: #b56d13;
+}
+
+.history-version-node.pass > i {
+  background: #e9f7ef;
+  color: #0f9d62;
+}
+
+.history-version-node.pending > i {
+  background: #f0f2f5;
+  color: #8b919c;
+}
+
+.history-version-node b {
+  display: block;
+  margin-top: 1px;
+  color: #333843;
+  font-size: 10px;
+}
+
+.history-version-node span {
+  display: block;
+  margin-top: 2px;
+  color: #858b95;
+  font-size: 9px;
+  line-height: 1.35;
+}
+
+#history-dialog {
+  width: min(760px, calc(100vw - 48px));
+}
+
+#history-list .history-entry {
+  padding-block: 18px;
+}
+
 @media (max-width: 1280px) {
   .portfolio-preview-viewport { min-height: 500px; padding-inline: 10px; }
 }
