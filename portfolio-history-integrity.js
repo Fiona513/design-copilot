@@ -18,6 +18,10 @@
     return (review?.issues || []).filter((item) => item.status === "fixed-in-v2").length;
   }
 
+  function uniqueIterationIssueCount(iterations) {
+    return new Set((iterations || []).map((item) => item?.issueId).filter(Boolean)).size;
+  }
+
   function syncRound1History() {
     const entries = [...document.querySelectorAll("#history-list .history-entry")];
     const items = history();
@@ -26,6 +30,7 @@
     entries.forEach((entry, index) => {
       const state = items[index]?.state;
       const reviews = state?.reviews || [];
+      const iterations = state?.iterations || [];
       const round1 = reviews.find((review) => Number(review.round) === 1) || reviews[0];
       if (!round1) return;
 
@@ -34,8 +39,12 @@
       const meta = node?.querySelector("span");
       if (!node || !meta) return;
 
-      const found = historicalFindingCount(round1);
-      const fixed = fixedInV2Count(round1);
+      const reviewFindings = historicalFindingCount(round1);
+      const iterationFindings = uniqueIterationIssueCount(iterations);
+      const found = Math.max(reviewFindings, iterationFindings);
+      const fixedFromReview = fixedInV2Count(round1);
+      const fixed = Math.max(fixedFromReview, iterationFindings);
+
       let text = "Passed";
       let tone = "pass";
 
@@ -54,5 +63,6 @@
 
   const observer = new MutationObserver(() => requestAnimationFrame(syncRound1History));
   observer.observe(document.documentElement, { childList: true, subtree: true });
+  window.addEventListener("storage", syncRound1History);
   syncRound1History();
 })();
