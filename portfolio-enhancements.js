@@ -103,6 +103,22 @@
     cleanupExpandedState();
   }
 
+  /* app.js keeps retrySpec only in memory. After a reload the persisted provider warning
+     can still be visible while retrySpec is gone, making Retry real AI a no-op.
+     On artifact screens, translate that stale retry into an explicit Regenerate action,
+     which rebuilds the provider call from current persisted state. */
+  document.addEventListener("click", (event) => {
+    const button = event.target.closest('[data-action="retry-ai"]');
+    if (!button) return;
+    const warning = button.closest(".provider-alert");
+    if (!warning) return;
+    const regenerate = document.querySelector('[data-action="regenerate"]');
+    if (!regenerate || regenerate.disabled) return;
+    event.preventDefault();
+    event.stopImmediatePropagation();
+    regenerate.click();
+  }, true);
+
   const observer = new MutationObserver(() => requestAnimationFrame(enhance));
   observer.observe(document.documentElement, { childList: true, subtree: true });
   window.addEventListener("keydown", (event) => {
