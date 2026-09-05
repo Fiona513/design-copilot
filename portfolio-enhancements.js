@@ -7,6 +7,22 @@
   const DEFAULT_ZOOM = 80;
   let zoom = DEFAULT_ZOOM;
 
+  function safeState() {
+    try {
+      return window.DesignCopilotDebug?.getState?.() || null;
+    } catch {
+      return null;
+    }
+  }
+
+  function safeHistory() {
+    try {
+      return window.DesignCopilotDebug?.getHistory?.() || [];
+    } catch {
+      return [];
+    }
+  }
+
   function reviewState(issue) {
     const status = issue.classList;
     const severity = issue.querySelector(".severity")?.textContent?.trim().toLowerCase() || "";
@@ -42,6 +58,17 @@
       mark.innerHTML = `<i>${state.icon}</i><b>${state.label}</b>`;
       header.prepend(mark);
     });
+
+    /* Local fallback copy must reflect the actual V2 data instead of a hard-coded value. */
+    const state = safeState();
+    const target = state?.outputs?.prototypes?.v2?.settings?.touchTarget;
+    if (state?.runtime?.provider === "local-demo" && target && state?.status === "review-v2") {
+      document.querySelectorAll(".review-issue p").forEach((node) => {
+        if (/52px/.test(node.textContent || "") && Number(target) !== 52) {
+          node.textContent = node.textContent.replaceAll("52px", `${target}px`);
+        }
+      });
+    }
   }
 
   function setZoom(stage, nextZoom) {
@@ -92,19 +119,15 @@
   }
 
   function currentArtifactKey() {
-    try {
-      const status = window.DesignCopilotDebug?.getState?.()?.status || "";
-      return {
-        "user-insight": "userInsight",
-        "experience-principles": "experiencePrinciples",
-        "user-flow": "userFlow",
-        "screen-structure": "screenStructure",
-        "prototype-v1": "prototypeV1",
-        "prototype-v2": "prototypeV2",
-      }[status] || null;
-    } catch {
-      return null;
-    }
+    const status = safeState()?.status || "";
+    return {
+      "user-insight": "userInsight",
+      "experience-principles": "experiencePrinciples",
+      "user-flow": "userFlow",
+      "screen-structure": "screenStructure",
+      "prototype-v1": "prototypeV1",
+      "prototype-v2": "prototypeV2",
+    }[status] || null;
   }
 
   function regenerateCurrentArtifact() {
@@ -120,15 +143,16 @@
 
   function enhancePersistentProviderRetry() {
     const existing = document.querySelector(".persistent-provider-retry");
-    let state = null;
-    try {
-      state = window.DesignCopilotDebug?.getState?.() || null;
-    } catch {
-      state = null;
-    }
-
+    const state = safeState();
     const fallbackActive = state?.runtime?.provider === "local-demo";
     const warningVisible = Boolean(document.querySelector("#agent-content .provider-alert:not(.persistent-provider-retry)"));
+
+    /* Completed tasks use a quiet recorded-fallback status instead of an error/retry card. */
+    if (state?.status === "complete") {
+      existing?.remove();
+      return;
+    }
+
     if (!fallbackActive || warningVisible) {
       existing?.remove();
       return;
@@ -151,6 +175,100 @@
     else agent.prepend(alert);
   }
 
+  function enhanceCompletedFallback() {
+    const state = safeState();
+    const agent = document.querySelector("#agent-content");
+    const badge = document.querySelector(".provider-badge");
+    const existing = document.querySelector(".provider-fallback-compact");
+
+    if (state?.status !== "complete") {
+      existing?.remove();
+      return;
+    }
+
+    if (state.runtime?.provider !== "local-demo") {
+      existing?.remove();
+      return;
+    }
+
+    /* Remove the large warning card after completion; the event remains in state/export. */
+    agent?.querySelectorAll(".provider-alert").forEach((node) => node.remove());
+    document.querySelector(".persistent-provider-retry")?.remove();
+    if (badge) badge.textContent = "Fallback recorded";
+
+    if (!agent || existing) return;
+    const code = state.runtime?.providerWarning?.code || "STRUCTURED_OUTPUT_FALLBACK";
+    const compact = document.createElement("section");
+    compact.className = "provider-fallback-compact";
+    compact.innerHTML = `
+      <span>Review Round 2</span>
+      <div><b>Completed with fallback</b><p>${code} · 结构化输出校验失败后由本地评审器完成复评；Prototype V2 数据未被回退结果改写。</p></div>`;
+    const plan = agent.querySelector(".agent-plan");
+    if (plan) plan.before(compact);
+    else agent.prepend(compact);
+  }
+
+  function openIssueCount(review) {
+    return (review?.issues || []).filter((item) => item.status === "open").length;
+  }
+
+  function timelineNode(label, meta, tone = "done") {
+    const icon = tone === "pass" ? "✓" : tone === "warn" ? "!" : tone === "pending" ? "·" : "✓";
+    return `<div class="history-version-node ${tone}"><i>${icon}</i><div><b>${label}</b><span>${meta}</span></div></div>`;
+  }
+
+  function buildVersionChain(entry) {
+    const itemState = entry?.state || {};
+    const v1 = itemState.outputs?.prototypes?.v1;
+    const v2 = itemState.outputs?.prototypes?.v2;
+    const reviews = itemState.reviews || [];
+    const r1 = reviews.find((review) => Number(review.round) === 1) || reviews[0];
+    const r2 = reviews.find((review) => Number(review.round) === 2) || reviews[1];
+    const iterations = itemState.iterations || [];
+
+    const nodes = [];
+    if (v1) {
+      const target = v1.settings?.touchTarget;
+      nodes.push(timelineNode("Prototype V1", `Generated${target ? ` · ${target}px targets` : ""}`));
+    }
+    if (r1) {
+      const count = openIssueCount(r1);
+      nodes.push(timelineNode("Review Round 1", count ? `${count} issue${count === 1 ? "" : "s"} found` : "Passed", count ? "warn" : "pass"));
+    }
+    if (v2) {
+      const target = v2.settings?.touchTarget;
+      const changes = iterations.reduce((sum, item) => sum + (item.changes?.length || 0), 0);
+      nodes.push(timelineNode("Prototype V2", `${changes || v2.appliedChanges?.length || 0} applied change${(changes || v2.appliedChanges?.length || 0) === 1 ? "" : "s"}${target ? ` · ${target}px targets` : ""}`));
+    }
+    if (r2) {
+      const count = openIssueCount(r2);
+      nodes.push(timelineNode("Review Round 2", count ? `${count} issue${count === 1 ? "" : "s"} still open` : "Passed · 0 open issues", count ? "warn" : "pass"));
+    }
+
+    return nodes.length ? `<div class="history-version-chain">${nodes.join("")}</div>` : "";
+  }
+
+  function enhanceHistoryTimeline() {
+    const dialog = document.querySelector("#history-dialog");
+    const entries = [...document.querySelectorAll("#history-list .history-entry")];
+    if (!dialog || !entries.length) return;
+
+    const title = dialog.querySelector("#history-title");
+    if (title) title.textContent = "项目与版本历史";
+
+    const history = safeHistory();
+    entries.forEach((entryNode, index) => {
+      const historyEntry = history[index];
+      if (!historyEntry?.state) return;
+      const signature = `${historyEntry.id}:${historyEntry.completedAt}:${historyEntry.state?.reviews?.length || 0}:${Boolean(historyEntry.state?.outputs?.prototypes?.v2)}`;
+      if (entryNode.dataset.timelineSignature === signature) return;
+      entryNode.dataset.timelineSignature = signature;
+      entryNode.querySelector(".history-version-chain")?.remove();
+      const wrapper = entryNode.querySelector(":scope > div");
+      if (wrapper) wrapper.insertAdjacentHTML("beforeend", buildVersionChain(historyEntry));
+    });
+  }
+
   function cleanupExpandedState() {
     if (!document.querySelector(".portfolio-preview-stage.is-expanded")) {
       document.body.classList.remove("preview-expanded");
@@ -161,6 +279,8 @@
     enhancePrototype();
     enhanceReview();
     enhancePersistentProviderRetry();
+    enhanceCompletedFallback();
+    enhanceHistoryTimeline();
     cleanupExpandedState();
   }
 
