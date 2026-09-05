@@ -91,6 +91,66 @@
     });
   }
 
+  function currentArtifactKey() {
+    try {
+      const status = window.DesignCopilotDebug?.getState?.()?.status || "";
+      return {
+        "user-insight": "userInsight",
+        "experience-principles": "experiencePrinciples",
+        "user-flow": "userFlow",
+        "screen-structure": "screenStructure",
+        "prototype-v1": "prototypeV1",
+        "prototype-v2": "prototypeV2",
+      }[status] || null;
+    } catch {
+      return null;
+    }
+  }
+
+  function regenerateCurrentArtifact() {
+    const key = currentArtifactKey();
+    const selector = key
+      ? `[data-action="regenerate"][data-key="${key}"]`
+      : '[data-action="regenerate"]';
+    const regenerate = document.querySelector(selector);
+    if (!regenerate || regenerate.disabled) return false;
+    regenerate.click();
+    return true;
+  }
+
+  function enhancePersistentProviderRetry() {
+    const existing = document.querySelector(".persistent-provider-retry");
+    let state = null;
+    try {
+      state = window.DesignCopilotDebug?.getState?.() || null;
+    } catch {
+      state = null;
+    }
+
+    const fallbackActive = state?.runtime?.provider === "local-demo";
+    const warningVisible = Boolean(document.querySelector("#agent-content .provider-alert:not(.persistent-provider-retry)"));
+    if (!fallbackActive || warningVisible) {
+      existing?.remove();
+      return;
+    }
+
+    if (existing) return;
+    const agent = document.querySelector("#agent-content");
+    if (!agent) return;
+
+    const alert = document.createElement("section");
+    alert.className = "provider-alert persistent-provider-retry";
+    alert.innerHTML = `
+      <p class="agent-label">LOCAL FALLBACK ACTIVE</p>
+      <b>当前结果来自本地兜底</b>
+      <p>可以继续当前流程，也可以随时重新尝试真实 AI；接受 fallback 不会永久关闭重试入口。</p>
+      <div><button type="button" data-persistent-retry>Retry real AI</button></div>`;
+
+    const plan = agent.querySelector(".agent-plan");
+    if (plan) plan.before(alert);
+    else agent.prepend(alert);
+  }
+
   function cleanupExpandedState() {
     if (!document.querySelector(".portfolio-preview-stage.is-expanded")) {
       document.body.classList.remove("preview-expanded");
@@ -100,23 +160,31 @@
   function enhance() {
     enhancePrototype();
     enhanceReview();
+    enhancePersistentProviderRetry();
     cleanupExpandedState();
   }
 
   /* app.js keeps retrySpec only in memory. After a reload the persisted provider warning
-     can still be visible while retrySpec is gone, making Retry real AI a no-op.
-     On artifact screens, translate that stale retry into an explicit Regenerate action,
-     which rebuilds the provider call from current persisted state. */
+     can still be visible while retrySpec is gone. Convert the warning retry into an
+     explicit regenerate from current persisted state so it still works after reload. */
   document.addEventListener("click", (event) => {
-    const button = event.target.closest('[data-action="retry-ai"]');
-    if (!button) return;
-    const warning = button.closest(".provider-alert");
-    if (!warning) return;
-    const regenerate = document.querySelector('[data-action="regenerate"]');
-    if (!regenerate || regenerate.disabled) return;
-    event.preventDefault();
-    event.stopImmediatePropagation();
-    regenerate.click();
+    const retry = event.target.closest('[data-action="retry-ai"]');
+    if (retry?.closest(".provider-alert")) {
+      if (regenerateCurrentArtifact()) {
+        event.preventDefault();
+        event.stopImmediatePropagation();
+      }
+      return;
+    }
+
+    const persistentRetry = event.target.closest("[data-persistent-retry]");
+    if (!persistentRetry) return;
+    persistentRetry.disabled = true;
+    persistentRetry.textContent = "Retrying…";
+    if (!regenerateCurrentArtifact()) {
+      persistentRetry.disabled = false;
+      persistentRetry.textContent = "Retry real AI";
+    }
   }, true);
 
   const observer = new MutationObserver(() => requestAnimationFrame(enhance));
