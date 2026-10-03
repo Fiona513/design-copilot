@@ -115,9 +115,11 @@ function makeHarness({ storage = makeStorage(), fetchMode = "model" } = {}) {
 
   function setForm(selector, data) {
     forms[selector] = element({
+      id: selector === '#acceptance-add' ? 'acceptance-add' : '',
+      dataset: { acceptanceId: data.acceptanceId },
       _data: data,
       elements: Object.fromEntries(Object.keys(data).map((key) => [key, { value: data[key] }])),
-      matches(target) { return target === selector; },
+      matches(target) { return target.split(',').map(item => item.trim()).includes(selector); },
       querySelector() { return element(); },
     });
   }
@@ -148,6 +150,26 @@ async function approveAndWait(harness, key) {
 }
 
 describe("browser task state with LLMProvider", () => {
+  test('human acceptance requires evidence, persists, and never silently follows prototype revisions', async () => {
+    const h = makeHarness();
+    h.setForm('#project-form', projectForm(projects.commerce, 'commerce')); h.submit('#project-form'); await h.wait();
+    h.setForm('#acceptance-add', { rule: 'Primary action is explicit', screen: 'Orders' }); h.submit('#acceptance-add');
+    const id = h.state().acceptance[0].id;
+    const verdict = { acceptanceId: id, status: 'met', note: '', before: 'Ambiguous', after: 'Explicit', issueId: '' };
+    h.setForm('.acceptance-item', verdict); h.submit('.acceptance-item');
+    assert.equal(h.state().acceptance[0].status, 'pending');
+    h.setForm('#brief-form', briefForm(h.state())); h.click('approve-brief'); await h.wait();
+    for (const key of ['userInsight', 'experiencePrinciples', 'userFlow', 'screenStructure']) await approveAndWait(h, key);
+    h.setForm('.acceptance-item', { ...verdict, note: 'Checked the primary action in Orders.' }); h.submit('.acceptance-item');
+    const first = h.state().acceptance[0]; assert.equal(first.status, 'met'); assert.equal(first.checks.length, 1);
+    assert.equal(makeHarness({ storage: h.storage }).state().acceptance[0].snapshot, first.snapshot);
+    h.click('regenerate', { key: 'prototypeV1' }); await h.wait();
+    const changed = h.state();
+    assert.notEqual(first.snapshot, JSON.stringify({ brief: changed.brief, context: changed.context, prototypes: changed.outputs.prototypes }));
+    assert.equal(changed.acceptance[0].checks.length, 1);
+    h.setForm('.acceptance-item', { ...verdict, note: 'Rechecked.', issueId: 'missing' }); h.submit('.acceptance-item');
+    assert.equal(h.state().acceptance[0].checks.length, 1);
+  });
   test("ecommerce input completes unchanged Golden Path with Ask Agent, Regenerate, Apply Fix, Re-review, History and persistence", async () => {
     const harness = makeHarness();
     harness.setForm("#project-form", projectForm(projects.commerce, "commerce"));

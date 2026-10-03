@@ -713,8 +713,10 @@
     if (!state) return;
     try {
       localStorage.setItem(ACTIVE_KEY, JSON.stringify(state));
+      return true;
     } catch {
       showToast("无法写入本机存储，请检查浏览器隐私设置", "error");
+      return false;
     }
   }
 
@@ -1356,8 +1358,74 @@
     renderContext();
     renderAgent();
     renderCanvas();
+    renderAcceptance();
     renderRuntimeState();
     renderFooter();
+  }
+
+  function acceptanceSnapshot() {
+    return JSON.stringify({ brief: state.brief, context: state.context, prototypes: state.outputs.prototypes });
+  }
+
+  function renderAcceptance() {
+    if (!state.project) return;
+    const items = Array.isArray(state.acceptance) ? state.acceptance : [];
+    const issues = state.reviews.flatMap(review => review.issues.map(issue => ({ ...issue, round: review.round })));
+    const snapshot = acceptanceSnapshot();
+    const pending = items.filter(item => item.status !== 'met' || item.snapshot !== snapshot).length;
+    dom.canvas.insertAdjacentHTML('beforeend', `<section class="acceptance-workspace" aria-labelledby="acceptance-title">
+      <h2 id="acceptance-title">需求验收 · 人工核对</h2>
+      <p>写下可检查的条件，关联问题，核对修改前后。AI 通过不等于人工验收；需求或原型改变后，原有判断会标为待复核。</p>
+      <p><strong>${items.length ? `${pending} / ${items.length} 项尚未确认满足` : '尚未定义验收项'}</strong></p>
+      <form id="acceptance-add"><label for="acceptance-rule">验收条件</label><input id="acceptance-rule" name="rule" maxlength="300" required placeholder="例如：阅读页只有一个主操作" />
+      <label for="acceptance-screen">对应页面</label><input id="acceptance-screen" name="screen" maxlength="100" required placeholder="例如：阅读页" />
+      <button class="outline" type="submit" ${state.runtime.isRunning ? 'disabled' : ''}>添加检查项</button></form>
+      ${items.map(item => `<form class="acceptance-item" data-acceptance-id="${esc(item.id)}">
+        <h3>${esc(item.rule)}</h3><p>页面：${esc(item.screen)} · ${item.snapshot && item.snapshot !== snapshot ? '内容已变化，请重新核对' : item.status === 'met' ? '人工确认满足' : item.status === 'unmet' ? '尚未满足' : '待检查'}</p>
+        <label for="issue-${esc(item.id)}">关联 AI 问题（可选）</label><select id="issue-${esc(item.id)}" name="issueId"><option value="">未关联</option>${issues.map(issue => `<option value="${esc(`${issue.round}:${issue.id}`)}" ${item.issueId === `${issue.round}:${issue.id}` ? 'selected' : ''}>第 ${esc(issue.round)} 轮 · ${esc(issue.screen)} · ${esc(issue.problem)}</option>`).join('')}</select>
+        <div class="acceptance-pair"><label>修改前观察<textarea name="before" maxlength="1500">${esc(item.before)}</textarea></label><label>修改后观察<textarea name="after" maxlength="1500">${esc(item.after)}</textarea></label></div>
+        <label for="verdict-${esc(item.id)}">本次人工判断</label><select id="verdict-${esc(item.id)}" name="status"><option value="pending" ${item.status === 'pending' ? 'selected' : ''}>待检查</option><option value="unmet" ${item.status === 'unmet' ? 'selected' : ''}>尚未满足</option><option value="met" ${item.status === 'met' ? 'selected' : ''}>确认满足</option></select>
+        <label for="note-${esc(item.id)}">判断依据（确认满足时必填）</label><textarea id="note-${esc(item.id)}" name="note" maxlength="1500">${esc(item.note)}</textarea>
+        <button class="primary" type="submit" ${state.runtime.isRunning ? 'disabled' : ''}>保存本次核对</button>
+        ${item.checks?.length ? `<details><summary>此前核对记录（${item.checks.length}）</summary>${item.checks.map(check => `<p>${esc(check.at)} · ${esc(check.status)} · ${esc(check.note || '未填写依据')}</p>`).join('')}</details>` : ''}
+      </form>`).join('')}
+      ${state.outputs.prototypes.v1 ? `<h3>同一页面，核对两个版本</h3><p>下方底部导航同步切换对照页面。这是当前原型的实际渲染，不是自动检测结论。</p><div class="acceptance-previews"><figure><figcaption>V1 · 修改前</figcaption>${renderPhone(state.outputs.prototypes.v1)}</figure><figure><figcaption>V2 · 修改后</figcaption>${state.outputs.prototypes.v2 ? renderPhone(state.outputs.prototypes.v2) : '<p>尚未生成 V2，不能提前确认修改效果。</p>'}</figure></div>` : ''}
+      <details><summary>查看原型结构数据 V1 / V2</summary><div class="acceptance-pair"><pre>${esc(state.outputs.prototypes.v1 ? JSON.stringify(state.outputs.prototypes.v1, null, 2) : '尚未生成 V1')}</pre><pre>${esc(state.outputs.prototypes.v2 ? JSON.stringify(state.outputs.prototypes.v2, null, 2) : '尚未生成 V2')}</pre></div></details>
+    </section>`);
+  }
+
+  function saveAcceptance(form) {
+    if (!state.project || state.runtime.isRunning) return;
+    const data = new FormData(form);
+    state.acceptance ||= [];
+    if (form.id === 'acceptance-add') {
+      const rule = String(data.get('rule') || '').trim().slice(0, 300);
+      const screen = String(data.get('screen') || '').trim().slice(0, 100);
+      if (!rule || !screen) return;
+      state.acceptance.push({ id: uid(), rule, screen, issueId: '', before: '', after: '', note: '', status: 'pending', checks: [] });
+    } else {
+      const item = state.acceptance.find(value => value.id === form.dataset.acceptanceId);
+      if (!item) return;
+      const status = String(data.get('status'));
+      const note = String(data.get('note') || '').trim().slice(0, 1500);
+      if (!['pending', 'met', 'unmet'].includes(status)) return;
+      if (status === 'met' && (!note || !state.outputs.prototypes.v1)) {
+        showToast('确认满足需要已生成的原型和具体判断依据', 'error'); return;
+      }
+      const issueId = String(data.get('issueId') || '');
+      if (issueId && !state.reviews.some(review => review.issues.some(issue => `${review.round}:${issue.id}` === issueId))) {
+        showToast('关联问题已变化，请重新选择', 'error'); return;
+      }
+      const check = { at: new Date().toISOString(), status, note, issueId,
+        before: String(data.get('before') || '').trim().slice(0, 1500),
+        after: String(data.get('after') || '').trim().slice(0, 1500), snapshot: acceptanceSnapshot() };
+      Object.assign(item, check, { checks: [...(item.checks || []), check] });
+    }
+    state.updatedAt = new Date().toISOString();
+    const persisted = persistActive();
+    if (state.status === 'complete') saveCompletedToHistory();
+    render();
+    showToast(persisted ? '验收记录已保存到本机' : '本机保存失败，请勿关闭页面；可稍后重试保存', persisted ? 'success' : 'error');
   }
 
   function renderStages() {
@@ -1724,6 +1792,7 @@
       currentStep: state.currentStep,
       outputs: state.outputs,
       reviews: state.reviews,
+      acceptance: state.acceptance || [],
       iterations: state.iterations,
       history: state.history,
       status: state.status,
@@ -1787,6 +1856,11 @@
   }
 
   document.addEventListener("submit", (event) => {
+    if (event.target.matches('#acceptance-add, .acceptance-item')) {
+      event.preventDefault();
+      saveAcceptance(event.target);
+      return;
+    }
     if (event.target.matches("#project-form")) {
       event.preventDefault();
       createProjectFromForm();

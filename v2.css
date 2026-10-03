@@ -540,3 +540,22 @@ body { margin: 0; color: var(--ink); }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
 }
+/* Human-owned acceptance is separate from model review results. */
+.acceptance-workspace { margin-top: 32px; padding: 24px; border-top: 1px solid #ced5e1; color: #25334a; background: #fff; }
+.acceptance-workspace h2 { font-size: 22px; margin: 0 0 12px; }
+.acceptance-workspace p { line-height: 1.7; font-size: 14px; margin: 8px 0 16px; }
+.acceptance-workspace form { display: grid; gap: 10px; margin-block: 20px; }
+.acceptance-workspace label { font-size: 14px; display: grid; gap: 8px; }
+.acceptance-workspace input, .acceptance-workspace textarea, .acceptance-workspace select { box-sizing: border-box; width: 100%; min-width: 0; padding: 12px; border: 1px solid #8a96a8; border-radius: 6px; background: #fff; color: #25334a; font: inherit; }
+.acceptance-workspace textarea { min-height: 90px; resize: vertical; }
+.acceptance-workspace button { justify-self: start; min-height: 44px; }
+.acceptance-workspace summary { cursor: pointer; padding-block: 12px; }
+.acceptance-item { border-top: 1px solid #ced5e1; padding-top: 20px; }
+.acceptance-previews { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 16px; overflow: auto; }
+.acceptance-previews figure { margin: 0; min-width: 0; }
+.acceptance-previews figcaption { font-size: 14px; font-weight: 600; margin: 12px 0; }
+.acceptance-previews .prototype-phone { max-width: 100%; margin: 0 auto; }
+.acceptance-previews p { margin: revert; font-size: revert; }
+.acceptance-pair { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 16px; }
+.acceptance-pair pre { max-height: 300px; overflow: auto; white-space: pre-wrap; overflow-wrap: anywhere; background: #f5f6fa; padding: 16px; font-size: 13px; }
+@media(max-width:700px) { .acceptance-pair { grid-template-columns: 1fr; } .acceptance-workspace { padding: 16px; } }

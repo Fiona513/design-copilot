@@ -36,6 +36,13 @@ test("static root, health aliases, body limit and per-IP rate limit are availabl
     assert.equal(asset.status, 200);
     assert.match(asset.headers.get("content-type"), /image\/png/);
 
+    for (const path of ["/app.js", "/v2.css", "/portfolio-enhancements.js", "/portfolio-history-integrity.js"]) {
+      assert.equal((await fetch(`${baseUrl}${path}`)).status, 200, path);
+    }
+    for (const path of ["/.env", "/.git/config", "/server.mjs", "/package.json", "/tests/fixtures.mjs", "/assets/%2e%2e%5cserver.mjs", "/%2eenv"]) {
+      assert.equal((await fetch(`${baseUrl}${path}`)).status, 404, path);
+    }
+
     const health = await fetch(`${baseUrl}/health`);
     assert.equal(health.status, 200);
     assert.equal((await health.json()).ok, true);

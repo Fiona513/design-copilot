@@ -261,6 +261,12 @@ async function serveStatic(request, response, rootDir) {
     return;
   }
   const relative = pathname === "/" ? "index.html" : pathname.replace(/^\/+/, "");
+  const publicFiles = new Set(["index.html", "app.js", "styles.css", "calibration.css", "v2.css", "portfolio-enhancements.css", "portfolio-enhancements.js", "portfolio-history-integrity.js"]);
+  const publicAsset = /^assets\/(?:[A-Za-z0-9_-]+\/)*[A-Za-z0-9_.-]+\.(?:svg|png|jpg|jpeg|webp|ico|woff2?)$/i.test(relative);
+  if (!publicFiles.has(relative) && !publicAsset) {
+    sendJson(response, 404, { ok: false, error: { code: "NOT_FOUND", message: "Not found." } });
+    return;
+  }
   const safeRoot = resolve(rootDir);
   const filePath = resolve(safeRoot, normalize(relative));
   if (filePath !== safeRoot && !filePath.startsWith(`${safeRoot}${sep}`)) {
